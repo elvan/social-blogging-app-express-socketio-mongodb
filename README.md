@@ -1,1 +1,1 @@
-# social-blogging-app-express-socketio-mongodb
+# SocialBlogging
