@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
-    "@types/node": "^18.15.11",
+    "@types/node": "^16.18.23",
     "nodemon": "^2.0.22"
   }
 }
