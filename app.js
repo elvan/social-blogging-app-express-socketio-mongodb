@@ -21,6 +21,12 @@ let sessionOptions = session({
 
 app.use(sessionOptions);
 app.use(flash());
+
+app.use(function (req, res, next) {
+  res.locals.user = req.session.user;
+  next();
+});
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(express.static('public'));
