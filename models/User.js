@@ -4,9 +4,15 @@ const validator = require('validator').default;
 
 const usersCollection = require('../db').db().collection('users');
 
-let User = function (data) {
+let User = function (data, getAvatar) {
   this.data = data;
   this.errors = [];
+  if (getAvatar == undefined) {
+    getAvatar = false;
+  }
+  if (getAvatar) {
+    this.getAvatar();
+  }
 };
 
 User.prototype.cleanUp = function () {
