@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const MongoStore = require('connect-mongo');
 const express = require('express');
 const session = require('express-session');
 
@@ -11,6 +12,7 @@ const app = express();
 
 let sessionOptions = session({
   secret: SECRET,
+  store: MongoStore.create({ client: require('./db') }),
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 1000 * 60 * 60 * 24, httpOnly: true },

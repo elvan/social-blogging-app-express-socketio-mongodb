@@ -9,9 +9,9 @@ const client = new MongoClient(CONNECTIONSTRING);
 
 async function start() {
   await client.connect();
-  module.exports = client.db();
+  module.exports = client;
   const app = require('./app');
-  app.listen(3000);
+  app.listen(process.env.PORT);
 }
 
 start();
