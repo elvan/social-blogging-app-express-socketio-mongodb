@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const MongoStore = require('connect-mongo');
 const express = require('express');
+const flash = require('connect-flash');
 const session = require('express-session');
 
 const router = require('./router');
@@ -19,6 +20,7 @@ let sessionOptions = session({
 });
 
 app.use(sessionOptions);
+app.use(flash());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(express.static('public'));
