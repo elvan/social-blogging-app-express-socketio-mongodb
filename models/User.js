@@ -68,7 +68,9 @@ User.prototype.validate = function () {
         this.data.username.length < 31 &&
         validator.isAlphanumeric(this.data.username)
       ) {
-        let usernameExists = await usersCollection.findOne({ username: this.data.username });
+        let usernameExists = await usersCollection.findOne({
+          username: this.data.username,
+        });
         if (usernameExists) {
           this.errors.push('That username is already taken.');
         }
@@ -76,7 +78,9 @@ User.prototype.validate = function () {
 
       // Only if email is valid then check to see if it's already taken
       if (validator.isEmail(this.data.email)) {
-        let emailExists = await usersCollection.findOne({ email: this.data.email });
+        let emailExists = await usersCollection.findOne({
+          email: this.data.email,
+        });
         if (emailExists) {
           this.errors.push('That email is already being used.');
         }
@@ -131,6 +135,33 @@ User.prototype.register = function () {
 
 User.prototype.getAvatar = function () {
   this.avatar = `https://gravatar.com/avatar/${md5(this.data.email)}?s=128`;
+};
+
+User.findByUsername = function (username) {
+  return new Promise(function (resolve, reject) {
+    if (typeof username != 'string') {
+      reject();
+      return;
+    }
+    usersCollection
+      .findOne({ username: username })
+      .then(function (userDoc) {
+        if (userDoc) {
+          userDoc = new User(userDoc, true);
+          userDoc = {
+            _id: userDoc.data._id,
+            username: userDoc.data.username,
+            avatar: userDoc.avatar,
+          };
+          resolve(userDoc);
+        } else {
+          reject();
+        }
+      })
+      .catch(function () {
+        reject();
+      });
+  });
 };
 
 module.exports = User;
