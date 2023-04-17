@@ -1,4 +1,5 @@
 import axios from 'axios';
+import DOMPurify from 'dompurify';
 
 export default class Search {
   // 1. Select DOM elements, and keep track of any useful data
@@ -59,7 +60,7 @@ export default class Search {
 
   renderResultsHTML(posts) {
     if (posts.length) {
-      this.resultsArea.innerHTML = `<div class="list-group shadow-sm">
+      this.resultsArea.innerHTML = DOMPurify.sanitize(`<div class="list-group shadow-sm">
       <div class="list-group-item active"><strong>Search Results</strong> (${
         posts.length > 1 ? `${posts.length} items found` : '1 item found'
       })</div>
@@ -68,13 +69,13 @@ export default class Search {
           let postDate = new Date(post.createdDate);
           return `<a href="/post/${post._id}" class="list-group-item list-group-item-action">
             <img class="avatar-tiny" src="${post.author.avatar}"> <strong>${post.title}</strong>
-            <span class="text-muted small">by ${
-              post.author.username
-            } on ${postDate.getMonth()}/${postDate.getDate()}/${postDate.getFullYear()}</span>
+            <span class="text-muted small">by ${post.author.username} on ${
+            postDate.getMonth() + 1
+          }/${postDate.getDate()}/${postDate.getFullYear()}</span>
           </a>`;
         })
         .join('')}
-      </div>`;
+      </div>`);
     } else {
       this.resultsArea.innerHTML = `<p class="alert alert-danger text-center shadow-sm">Sorry, we could not find any results for that search.</p>`;
     }
