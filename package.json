@@ -7,10 +7,10 @@
   "author": "",
   "main": "db.js",
   "scripts": {
-    "dev": "nodemon db.js",
+    "dev": "nodemon db --ignore frontend-js --ignore public/ ",
     "start": "node db.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "nodemon db --ignore frontend-js --ignore public/ & webpack --watch"
+    "watch": "webpack --watch"
   },
   "dependencies": {
     "@babel/core": "^7.21.4",
