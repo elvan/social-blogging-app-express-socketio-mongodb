@@ -1,8 +1,8 @@
-const User = require('./User');
-
-const postsCollection = require('../db').db().collection('posts');
-
 const ObjectId = require('mongodb').ObjectId;
+const sanitizeHTML = require('sanitize-html');
+
+const User = require('./User');
+const postsCollection = require('../db').db().collection('posts');
 
 let Post = function (data, userid, requestedPostId) {
   this.data = data;
@@ -21,8 +21,14 @@ Post.prototype.cleanUp = function () {
 
   // get rid of any bogus properties
   this.data = {
-    title: this.data.title.trim(),
-    body: this.data.body.trim(),
+    title: sanitizeHTML(this.data.title.trim(), {
+      allowedTags: [],
+      allowedAttributes: {},
+    }),
+    body: sanitizeHTML(this.data.body.trim(), {
+      allowedTags: [],
+      allowedAttributes: {},
+    }),
     createdDate: new Date(),
     author: new ObjectId(this.userid),
   };
@@ -38,26 +44,24 @@ Post.prototype.validate = function () {
 };
 
 Post.prototype.create = function () {
-  return /** @type {Promise<void>} */ (
-    new Promise((resolve, reject) => {
-      this.cleanUp();
-      this.validate();
-      if (!this.errors.length) {
-        // save post into database
-        postsCollection
-          .insertOne(this.data)
-          .then(() => {
-            resolve();
-          })
-          .catch(() => {
-            this.errors.push('Please try again later.');
-            reject(this.errors);
-          });
-      } else {
-        reject(this.errors);
-      }
-    })
-  );
+  return new Promise((resolve, reject) => {
+    this.cleanUp();
+    this.validate();
+    if (!this.errors.length) {
+      // save post into database
+      postsCollection
+        .insertOne(this.data)
+        .then((info) => {
+          resolve(info.insertedId);
+        })
+        .catch(() => {
+          this.errors.push('Please try again later.');
+          reject(this.errors);
+        });
+    } else {
+      reject(this.errors);
+    }
+  });
 };
 
 Post.prototype.update = function () {
