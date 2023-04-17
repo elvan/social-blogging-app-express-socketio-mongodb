@@ -15,13 +15,35 @@ Follow.prototype.cleanUp = async function () {
   }
 };
 
-Follow.prototype.validate = async function () {
+Follow.prototype.validate = async function (action) {
   // followedUsername must exist in database
-  let followedAccount = await usersCollection.findOne({ username: this.followedUsername });
+  let followedAccount = await usersCollection.findOne({
+    username: this.followedUsername,
+  });
   if (followedAccount) {
     this.followedId = followedAccount._id;
   } else {
     this.errors.push('You cannot follow a user that does not exist.');
+  }
+
+  let doesFollowAlreadyExist = await followsCollection.findOne({
+    followedId: this.followedId,
+    authorId: new ObjectId(this.authorId),
+  });
+  if (action == 'create') {
+    if (doesFollowAlreadyExist) {
+      this.errors.push('You are already following this user.');
+    }
+  }
+  if (action == 'delete') {
+    if (!doesFollowAlreadyExist) {
+      this.errors.push('You cannot stop following someone you do not already follow.');
+    }
+  }
+
+  // should not be able to follow yourself
+  if (this.followedId?.equals(this.authorId)) {
+    this.errors.push('You cannot follow yourself.');
   }
 };
 
@@ -29,18 +51,48 @@ Follow.prototype.create = function () {
   return /** @type {Promise<void>} */ (
     new Promise(async (resolve, reject) => {
       this.cleanUp();
-      await this.validate();
+      await this.validate('create');
       if (!this.errors.length) {
-        authorId: new ObjectId(this.authorId),
-          await followsCollection.insertOne({
-            followedId: this.followedId,
-          });
+        await followsCollection.insertOne({
+          followedId: this.followedId,
+          authorId: new ObjectId(this.authorId),
+        });
         resolve();
       } else {
         reject(this.errors);
       }
     })
   );
+};
+
+Follow.prototype.delete = function () {
+  return /** @type {Promise<void>} */ (
+    new Promise(async (resolve, reject) => {
+      this.cleanUp();
+      await this.validate('delete');
+      if (!this.errors.length) {
+        await followsCollection.deleteOne({
+          followedId: this.followedId,
+          authorId: new ObjectId(this.authorId),
+        });
+        resolve();
+      } else {
+        reject(this.errors);
+      }
+    })
+  );
+};
+
+Follow.isVisitorFollowing = async function (followedId, visitorId) {
+  let followDoc = await followsCollection.findOne({
+    followedId: followedId,
+    authorId: new ObjectId(visitorId),
+  });
+  if (followDoc) {
+    return true;
+  } else {
+    return false;
+  }
 };
 
 module.exports = Follow;

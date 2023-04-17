@@ -1,5 +1,19 @@
+const Follow = require('../models/Follow');
 const Post = require('../models/Post');
 const User = require('../models/User');
+
+exports.sharedProfileData = async function (req, res, next) {
+  let isVisitorsProfile = false;
+  let isFollowing = false;
+  if (req.session.user) {
+    isVisitorsProfile = req.profileUser._id.equals(req.session.user._id);
+    isFollowing = await Follow.isVisitorFollowing(req.profileUser._id, req.visitorId);
+  }
+
+  req.isVisitorsProfile = isVisitorsProfile;
+  req.isFollowing = isFollowing;
+  next();
+};
 
 exports.mustBeLoggedIn = function (req, res, next) {
   if (req.session.user) {
@@ -17,7 +31,11 @@ exports.login = function (req, res) {
   user
     .login()
     .then(function (result) {
-      req.session.user = { avatar: user.avatar, username: user.data.username, _id: user.data._id };
+      req.session.user = {
+        avatar: user.avatar,
+        username: user.data.username,
+        _id: user.data._id,
+      };
       req.session.save(function () {
         res.redirect('/');
       });
@@ -41,7 +59,11 @@ exports.register = function (req, res) {
   user
     .register()
     .then(() => {
-      req.session.user = { username: user.data.username, avatar: user.avatar, _id: user.data._id };
+      req.session.user = {
+        username: user.data.username,
+        avatar: user.avatar,
+        _id: user.data._id,
+      };
       req.session.save(function () {
         res.redirect('/');
       });
@@ -79,10 +101,13 @@ exports.profilePostsScreen = function (req, res) {
   // ask our post model for posts by a certain author id
   Post.findByAuthorId(req.profileUser._id)
     .then(function (posts) {
+      console.log(req.profileUser);
       res.render('profile', {
         posts: posts,
         profileUsername: req.profileUser.username,
         profileAvatar: req.profileUser.avatar,
+        isFollowing: req.isFollowing,
+        isVisitorsProfile: req.isVisitorsProfile,
       });
     })
     .catch(function () {
