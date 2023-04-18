@@ -6,6 +6,7 @@ const flash = require('connect-flash');
 const markdown = require('marked');
 const sanitizeHTML = require('sanitize-html');
 const session = require('express-session');
+const socketio = require('socket.io');
 
 const router = require('./router');
 
@@ -74,4 +75,14 @@ app.set('view engine', 'ejs');
 
 app.use('/', router);
 
-module.exports = app;
+const server = require('http').createServer(app);
+
+const io = new socketio.Server(server);
+
+io.on('connection', function (socket) {
+  socket.on('chatMessageFromBrowser', function (data) {
+    io.emit('chatMessageFromServer', { message: data.message });
+  });
+});
+
+module.exports = server;
