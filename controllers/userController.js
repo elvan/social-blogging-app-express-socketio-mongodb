@@ -2,6 +2,21 @@ const Follow = require('../models/Follow');
 const Post = require('../models/Post');
 const User = require('../models/User');
 
+exports.doesUsernameExist = function (req, res) {
+  User.findByUsername(req.body.username)
+    .then(function () {
+      res.json(true);
+    })
+    .catch(function () {
+      res.json(false);
+    });
+};
+
+exports.doesEmailExist = async function (req, res) {
+  let emailBool = await User.doesEmailExist(req.body.email);
+  res.json(emailBool);
+};
+
 exports.sharedProfileData = async function (req, res, next) {
   let isVisitorsProfile = false;
   let isFollowing = false;
@@ -45,11 +60,7 @@ exports.login = function (req, res) {
   user
     .login()
     .then(function (result) {
-      req.session.user = {
-        avatar: user.avatar,
-        username: user.data.username,
-        _id: user.data._id,
-      };
+      req.session.user = { avatar: user.avatar, username: user.data.username, _id: user.data._id };
       req.session.save(function () {
         res.redirect('/');
       });
@@ -73,11 +84,7 @@ exports.register = function (req, res) {
   user
     .register()
     .then(() => {
-      req.session.user = {
-        username: user.data.username,
-        avatar: user.avatar,
-        _id: user.data._id,
-      };
+      req.session.user = { username: user.data.username, avatar: user.avatar, _id: user.data._id };
       req.session.save(function () {
         res.redirect('/');
       });
@@ -119,6 +126,7 @@ exports.profilePostsScreen = function (req, res) {
     .then(function (posts) {
       console.log(req.profileUser);
       res.render('profile', {
+        title: `Profile for ${req.profileUser.username}`,
         currentPage: 'posts',
         posts: posts,
         profileUsername: req.profileUser.username,
