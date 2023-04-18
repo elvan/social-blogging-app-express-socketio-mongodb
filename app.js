@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const MongoStore = require('connect-mongo');
+const csrf = require('csurf');
 const express = require('express');
 const flash = require('connect-flash');
 const markdown = require('marked');
@@ -69,11 +70,28 @@ app.use(function (req, res, next) {
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(express.static('public'));
+app.use(csrf());
 
 app.set('views', 'views');
 app.set('view engine', 'ejs');
 
+app.use(function (req, res, next) {
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
+
 app.use('/', router);
+
+app.use(function (err, req, res, next) {
+  if (err) {
+    if (err.code == 'EBADCSRFTOKEN') {
+      req.flash('errors', 'Cross site request forgery detected.');
+      req.session.save(() => res.redirect('/'));
+    } else {
+      res.render('404');
+    }
+  }
+});
 
 const server = require('http').createServer(app);
 
